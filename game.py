@@ -37,73 +37,63 @@ class Guess:
     gameid: str
     word: str
     
-    
-# iteration to cycle through URLs    
-def cycle(database):
-    # cycle('ABCD') --> A B C D A B C D A B C D ...
-    saved = []
-    for url in database:
-        yield url
-        saved.append(url)
-    while saved:
-        for url in saved:
-              yield url
-              
-    return saved
-
-async def _connect_db():
-    database = databases.Database(app.config["DATABASES"]["URL"])
-    await database.connect()
-    return database
-
-
-def _get_db():
-    if not hasattr(g, "sqlite_db"):
-        g.sqlite_db = _connect_db()
-    return g.sqlite_db
-
-
-@app.teardown_appcontext
-async def close_connection(exception):
-    db = getattr(g, "_sqlite_db", None)
-    if db is not None:
-        await db.disconnect()
-              
-# async def _connect_db():
-#     database = databases.Database(app.config["DATABASES"]["URL"])
-#     await database.connect()
-#     return database
-
 # async def _get_db():
-#     db1 = getattr(g, "_sqlite_db1", None)
-#     db2 = getattr(g, "_sqlite_db2", None)
-#     db3 = getattr(g, "_sqlite_db3", None)
-#     if db1 is None:
-#         db1 = g._sqlite_db1 = databases.Database(app.config["DATABASES"]["URL1"])
-#         await db1.connect()
-#     if db2 is None:
-#         db2 = g._sqlite_db2 = databases.Database(app.config["DATABASES"]["URL2"])
-#         await db2.connect()
-#     if db3 is None:
-#         db3 = g._sqlite_db3 = databases.Database(app.config["DATABASES"]["URL3"])
-#         await db3.connect()
-#     return db1, db2, db3
-
+#     db = getattr(g, "_sqlite_db", None)
+#     if db is None:
+#         db = g._sqlite_db = databases.Database(app.config["DATABASES"]["URL"])
+#         await db.connect()
+#     return db
 
 # @app.teardown_appcontext
 # async def close_connection(exception):
-#     db1 = getattr(g, "_sqlite_db1", None)
-#     db2 = getattr(g, "_sqlite_db2", None)
-#     db3 = getattr(g, "_sqlite_db3", None)
-#     if db1 is not None:
-#         db1 = g._sqlite_db1 = databases.Database(app.config["DATABASES"]["URL1"])
-#         await db1.disconnect()
-#     if db2 is not None:
-#         db2 = g._sqlite_db2 = databases.Database(app.config["DATABASES"]["URL2"])
-#         await db2.disconnect()
-#     if db3 is not None:
-#         db3 = g._sqlite_db3 = databases.Database(app.config["DATABASES"]["URL3"])
-#         await db3.disconnect()
+#     db = getattr(g, "_sqlite_db", None)
+#     if db is not None:
+#         await db.disconnect()
+
+async def _get_db():
+    alldb = []
+    db1 = getattr(g, "_sqlite_db1", None)
+    db2 = getattr(g, "_sqlite_db2", None)
+    db3 = getattr(g, "_sqlite_db3", None)
+    if db1 is None:
+        db1 = g._sqlite_db1 = databases.Database(app.config["DATABASES"]["URL1"])
+        await db1.connect()
+        alldb.append(db1)
+    if db2 is None:
+        db2 = g._sqlite_db2 = databases.Database(app.config["DATABASES"]["URL2"])
+        await db2.connect()
+        alldb.append(db2)
+    if db3 is None:
+        db3 = g._sqlite_db3 = databases.Database(app.config["DATABASES"]["URL3"])
+        await db3.connect()
+        alldb.append(db3)
+    return cycle(alldb)
+
+# iteration to cycle through URLs    
+def cycle(alldb):
+    # cycle('ABCD') --> A B C D A B C D A B C D ...
+    saved = []
+    for db in alldb:
+        yield db
+        saved.append(db)
+    while saved:
+        for db in saved:
+              yield db
+
+@app.teardown_appcontext
+async def close_connection(exception):
+    db1 = getattr(g, "_sqlite_db1", None)
+    db2 = getattr(g, "_sqlite_db2", None)
+    db3 = getattr(g, "_sqlite_db3", None)
+    if db1 is not None:
+        db1 = g._sqlite_db1 = databases.Database(app.config["DATABASES"]["URL1"])
+        await db1.disconnect()
+    if db2 is not None:
+        db2 = g._sqlite_db2 = databases.Database(app.config["DATABASES"]["URL2"])
+        await db2.disconnect()
+    if db3 is not None:
+        db3 = g._sqlite_db3 = databases.Database(app.config["DATABASES"]["URL3"])
+        await db3.disconnect()
 
 @app.route("/", methods=["GET"])
 def index():
